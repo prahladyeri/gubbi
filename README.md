@@ -34,6 +34,8 @@ All configuration is stored in `~/.config/gubbi/settings.json`. At least one pro
 	
 # Commands
 
+When a message starts with # (hash), it is interpreted as special command rather than a chat message sent to the LLM.
+
 ```plaintext
 	#help => List commands
 	#exit => Quit chat
