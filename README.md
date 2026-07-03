@@ -33,4 +33,4 @@
 
 # Screenshot
 
-![assets/screenshot.png](gubbi-chatbot)
+![gubbi-chatbot](assets/screenshot.png)
