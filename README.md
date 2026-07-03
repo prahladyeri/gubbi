@@ -26,6 +26,8 @@ All configuration is stored in `~/.config/gubbi/settings.json`. At least one pro
     }
 }
 ```
+
+in theory, it should work with any provider who follows [openai api spec](https://developers.openai.com/api/) though I've only tested with github and few others so far. Let me know through issue tracker if it works for others.
 	
 # Usage
 
