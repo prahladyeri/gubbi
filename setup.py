@@ -1,11 +1,12 @@
+from gubbi import __version__, PKG_NAME
 from pathlib import Path
 from setuptools import setup, find_packages
 
 HERE = Path(__file__).parent
 
 setup(
-    name="gubbi",
-    version="1.0.0",
+    name=PKG_NAME,
+    version=__version__,
     description="Minimalist terminal LLM chatbot",
     long_description=(HERE / "README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
