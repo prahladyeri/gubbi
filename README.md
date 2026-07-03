@@ -11,6 +11,22 @@
 
 	pip install gubbi
 	
+# Configuration
+
+All configuration is stored in `~/.config/gubbi/settings.json`. At least one provider needs added in order for chat to work. Either add it manually or program will ask for inputs on the first start.
+
+```json
+{
+    "providers": {
+        "github": {
+            "slug": "github",
+            "url": "https://models.github.ai/inference",
+            "default_model_id": "openai/gpt-4.1-mini"
+        }
+    }
+}
+```
+	
 # Usage
 
 	gubbi -a # add provider/model
