@@ -37,16 +37,16 @@ All configuration is stored in `~/.config/gubbi/settings.json`. At least one pro
 When a message starts with # (hash), it is interpreted as special command rather than a chat message sent to the LLM.
 
 ```plaintext
-	#help => List commands
-	#exit => Quit chat
-	#use <provider> => Switch provider
-	#model <model_name> => Switch model
-	#attach <path> => Attach a file
-	#clear => Clear context
-	#save => Save current chat
-	#load <filename> => Load an earlier chat
-	#models <filename> => List all models
-	#providers <filename> => List all providers	
+#help => List commands
+#exit => Quit chat
+#use <provider> => Switch provider
+#model <model_name> => Switch model
+#attach <path> => Attach a file
+#clear => Clear context
+#save => Save current chat
+#load <filename> => Load an earlier chat
+#models <filename> => List all models
+#providers <filename> => List all providers	
 ```
 
 # Screenshot
