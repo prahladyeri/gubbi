@@ -5,7 +5,7 @@
 
 # gubbi
 
-*Minimalist terminal LLM chatbot 🐤*
+*Minimalist LLM chatbot 🐤*
 
 # Installation
 
