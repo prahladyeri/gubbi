@@ -195,20 +195,17 @@ def main():
     Session.config_dir = cfghelper.get_config_dir(PKG_NAME)
     Session.cfg = cfghelper.get_settings(PKG_NAME)
     parser = argparse.ArgumentParser(description=f"Gubbi chat interface v{__version__}")
-    parser.add_argument('-c', '--chat', help='Start chat repl', action='store_true', default=False)
     parser.add_argument('-a', '--add-provider', help='Add OpenAI compatible provider', action='store_true', default=False)
     args = parser.parse_args()
     if args.add_provider:
         add_provider()
         return
+        
+    # just chat
     if 'providers' not in Session.cfg:
         print("No OpenAI compatible provider found.")
         if not add_provider(): return
-    if args.chat:
-        chat()
-        return
-    print("Too few arguments")
+    chat()
     
-
 if __name__ == '__main__':
     main()
