@@ -15,6 +15,15 @@ def get_config_dir(pkg_name):
     os.makedirs(tpath, exist_ok=True)
     return tpath
 
+def get_data_dir(pkg_name):
+    """
+    Returns the full path to settings.json for this package.
+    Auto creates directories if missing.
+    """
+    tpath = os.path.expanduser(os.path.join("~", ".local", "share", pkg_name))
+    os.makedirs(tpath, exist_ok=True)
+    return tpath
+
 def save_settings(pkg_name, cfg):
     """Save the settings dict as json"""
     fname = os.path.join( get_config_dir(pkg_name), 'settings.json')

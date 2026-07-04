@@ -23,6 +23,7 @@ init(autoreset=True)
 
 class Session: # use like static class vars
     config_dir = None
+    data_dir = None
     cfg = None
     provider_slug = None # current provider
     model_id = None # current model
@@ -193,6 +194,7 @@ def chat():
 
 def main():
     Session.config_dir = cfghelper.get_config_dir(PKG_NAME)
+    Session.data_dir = cfghelper.get_data_dir(PKG_NAME)
     Session.cfg = cfghelper.get_settings(PKG_NAME)
     parser = argparse.ArgumentParser(description=f"Gubbi chat interface v{__version__}")
     parser.add_argument('-a', '--add-provider', help='Add OpenAI compatible provider', action='store_true', default=False)
