@@ -4,7 +4,7 @@
 # @author Prahlad Yeri <prahladyeri@yahoo.com>
 # @license MIT
 
-#import os
+import os
 import sys
 #import json
 #import subprocess
@@ -47,22 +47,38 @@ class Session: # use like static class vars
     def current_provider():
         return Session.cfg["providers"][Session.provider_slug]
         
-def cmd_use(): # switch provider
-    # @todo: update provider slug and model_id in Session
-    # @todo: Session.connect()
-    # @todo: Session.update_prompt()
+def cmd_attach(*args): # attach file
     pass # @todo
+
+def cmd_use(*args): # switch provider
+    if swtich_provider():
+        Session.connect()
+        if not Session.model_id:
+            model_id = select_model()
+            if model_id:
+                Session.current_provider()['default_model_id'] = model_id
+                Session.model_id = model_id
+                cfghelper.save_settings(PKG_NAME, Session.cfg)
+        Session.update_prompt()
     
-def cmd_attach(): # attach file
-    pass # @todo
+def cmd_model(*args):# switch model
+    model_id = select_model()
+    if model_id:
+        Session.model_id = model_id
+        Session.current_provider()['default_model_id'] = model_id
+        cfghelper.save_settings(PKG_NAME, Session.cfg)
+        Session.update_prompt()
+        print(f"Default model set to '{model_id}'.")
     
-def cmd_model():# switch model
-    pass # @todo
+def cmd_help(*args):
+    print(COMMANDS)
     
-def cmd_help():
-    pass # @todo
+def cmd_clear(*args):
+    Session.stack = []
+    Session.messages = []
+    os.system('cls' if os.name == 'nt' else 'clear')
     
-def cmd_exit():
+def cmd_exit(*args):
     sys.exit()
 
 COMMANDS = {
@@ -71,17 +87,18 @@ COMMANDS = {
     "model": cmd_model,
     "attach": cmd_attach,
     "exit": cmd_exit,
-    #"clear": cmd_clear, # clear message stack
+    "clear": cmd_clear, # clear message stack
+    # "models": cmd_models, # list all models
+    # "providers": cmd_providers, # list all providers
     #"save": cmd_save, # save chat to file
     #"load": cmd_load, # load chat from file
-    #"models": cmd_models, # list models
-    #"providers": cmd_providers, # list providers
 }
 
 def _model_id(m):
        return m.id if hasattr(m, "id") else m["id"]
 
-def add_model(pslug):
+def select_model():
+    pslug = Session.provider_slug
     prov = Session.cfg['providers'][pslug]
     try:
         if 'models.github.ai' in prov['url']:
@@ -113,10 +130,10 @@ def add_model(pslug):
     if idx < 0 or idx >= len(models): 
         print("Invalid selection")
         return False
-    prov['default_model_id'] = _model_id(models[idx])
-    cfghelper.save_settings(PKG_NAME, Session.cfg)
-    print(f"Default model set to '{prov['default_model_id']}'.")
-    return True
+    # prov['default_model_id'] = _model_id(models[idx])
+    # cfghelper.save_settings(PKG_NAME, Session.cfg)
+    # print(f"Default model set to '{prov['default_model_id']}'.")
+    return _model_id(models[idx])
     
 
 def add_provider():
@@ -124,18 +141,36 @@ def add_provider():
     url = input("Enter provider base url:")
     api_key = input("Add provider api key:")
     if slug and url and api_key:
+        if 'providers' not in Session.cfg: 
+            Session.cfg['providers'] = {}
         keyring.set_password(PKG_NAME, f"{slug}_apikey", api_key)
-        if 'providers' not in Session.cfg: Session.cfg['providers'] = {}
         Session.cfg['providers'][slug] = {'slug': slug, 'url': url, 'default_model_id': None}
         cfghelper.save_settings(PKG_NAME, Session.cfg)
         # @todo: validate provider and key
         Session.provider_slug = slug
         Session.model_id = ""
         Session.connect()
-        add_model(slug)
+        model_id = select_model()
+        if model_id:
+            Session.cfg['providers'][slug]['default_model_id'] = model_id
+            cfghelper.save_settings(PKG_NAME, Session.cfg)
         return True # Provider added, proceed now
     else:
         return False
+        
+def swtich_provider():
+    keys = list(Session.cfg['providers'].keys())
+    for idx, key in enumerate(keys):
+        print(f"[{idx}] {key}")
+    raw = input('Select provider:')
+    if not raw.isdigit():
+        print("Please enter a number")
+        return False    
+    idx = int(raw)
+    if not 0 <= idx < len(keys): return False
+    Session.provider_slug = keys[idx]
+    Session.model_id = Session.cfg['providers'][keys[idx]]['default_model_id']
+    return True
         
 def dispatch_command(cmd):
     parts = cmd.split()
@@ -143,7 +178,6 @@ def dispatch_command(cmd):
     name = parts[0]
     args = parts[1:]
     func = COMMANDS.get(name)
-    #COMMANDS[name](*args)
     if func is None:
         print(f"Unknown command: {name}")
         return
@@ -153,7 +187,11 @@ def chat():
     Session.provider_slug = next(iter(Session.cfg["providers"]))
     prov = Session.current_provider()
     if not prov['default_model_id']:
-        if not add_model(Session.provider_slug): return
+        prov['default_model_id'] = select_model()
+        if not prov['default_model_id']: return
+        cfghelper.save_settings(PKG_NAME, Session.cfg)
+        print(f"Default model set to '{prov['default_model_id']}'.")
+        
     Session.model_id = prov['default_model_id']
     Session.connect()
     Session.update_prompt()
