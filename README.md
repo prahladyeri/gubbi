@@ -31,24 +31,32 @@ In theory, it should work with any provider who follows [openai api spec](https:
 	
 # Usage
 
-	gubbi # just chat
-	gubbi -a # add provider/model
+```bash
+usage: gubbi [-h] [-a] [-v]
+
+Gubbi chat interface
+
+optional arguments:
+  -h, --help          show this help message and exit
+  -a, --add-provider  Add OpenAI compatible provider
+  -v, --version       show program's version number and exit
+```
 	
 # Commands
 
-When a message starts with # (hash), it is interpreted as special command rather than a chat message sent to the LLM.
+When a message starts with / (slash), it is interpreted as special command rather than a chat message sent to the LLM.
 
 ```plaintext
-#help => List commands
-#exit => Quit chat
-#use <provider> => Switch provider
-#model <model_name> => Switch model
-#attach <path> => Attach a file
-#clear => Clear context
-#save => Save current chat
-#load <filename> => Load an earlier chat
-#models <filename> => List all models
-#providers <filename> => List all providers	
+/help => List commands
+/exit => Quit chat
+/use <provider> => Switch provider
+/model <model_name> => Switch model
+/attach <path> => Attach a file
+/clear => Clear context
+/save => Save current chat
+/load <filename> => Load an earlier chat
+/models <filename> => List all models
+/providers <filename> => List all providers	
 ```
 
 # Screenshot
