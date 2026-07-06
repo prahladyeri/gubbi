@@ -32,16 +32,64 @@ class Session: # use like static class vars
     stack = [] # chat stack
     messages = []
     attached = [] # attached files for the next due message to LLM
+    power_list = ['openai/gpt-oss-120b', # Strongest all-round reasoning model in the list. Excellent for engineering.
+        'qwen/qwen3.5-397b-a17b', # One of the best open models for coding and reasoning.
+        'mistralai/mistral-large-3-675b-instruct-2512', # Excellent long-form engineering and architecture.
+        'meta/llama-3.3-70b-instruct',  # Very dependable general-purpose model.
+        'nvidia/llama-3.1-nemotron-ultra-253b-v1', # NVIDIA's flagship reasoning model.
+        'moonshotai/kimi-k2.6', # Worth keeping because it's unusually strong on long context and software tasks.
+        'deepseek-ai/deepseek-v4-pro', # Excellent engineering model.
+        'models/gemini-3.1-pro-preview',
+        'models/gemini-2.5-pro',
+        ]
+    lite_list = ['deepseek-ai/deepseek-v4-flash', 
+        'openai/gpt-oss-20b',
+        'google/gemma-4-31b-it', # Great balance of reasoning, code and instruction following.
+        'meta/llama-4-maverick-17b-128e-instruct',
+        #'google/gemma-3-12b-it',
+        'mistralai/ministral-14b-instruct-2512',
+        'nv-mistralai/mistral-nemo-12b-instruct',
+        'microsoft/phi-4-mini-instruct',
+        'upstage/solar-10.7b-instruct',
+        'meta/llama-3.1-8b-instruct ', 'qwen/qwen3-next-80b-a3b-instruct',
+        'models/gemini-3.5-flash',
+        'models/gemini-2.5-flash',
+        ]
+        
+    coding_list = ['mistralai/codestral-22b-instruct-v0.1',
+        'ibm/granite-34b-code-instruct',
+        'deepseek-ai/deepseek-coder-6.7b-instruct',
+        'google/codegemma-7b'
+    ]
+    sysmsg = {
+        "role": "system",
+        "content": (
+            "You operate strictly as a plain-text terminal interface. "
+            "CRITICAL: Do NOT use any Markdown formatting whatsoever (no asterisks, no hashtags, no markdown code blocks like ```). "
+            "Output raw, unformatted text only.\n\n"
+            "DEFAULT CONVERSATIONAL MODE:\n"
+            "By default, all text, explanations, answers, trivia, lists, and dialogue must be written directly in the conversational body. "
+            "Do NOT use file tags for standard text conversations or simple answers.\n\n"
+            "FILE EXPORT PROTOCOL:\n"
+            "You may ONLY use the <file> tag at the absolute end of your response for heavy assets (e.g., source code scripts, raw SVG data, configuration files) OR when the user explicitly asks you to 'save', 'export', or 'write' something to a file.\n"
+            "When using the tag, do NOT duplicate its contents in the conversational body. Use this exact structure:\n"
+            "<file name='/path/to/file.ext'>file contents go here</file>"
+        )
+    }
+
+    
     
     @staticmethod
     def update_prompt():
-        Session.repl_prompt = f"me@{Fore.CYAN}{Session.provider_slug}>{Style.RESET_ALL} "
+        Session.repl_prompt = f"me@{Fore.YELLOW}{Session.provider_slug}>{Style.RESET_ALL} "
     
     @staticmethod
     def connect(): # call whenever provider changes
         Session.client = OpenAI( 
             api_key=keyring.get_password(PKG_NAME, f"{Session.provider_slug}_apikey"), 
             base_url = Session.current_provider()['url'], 
+            timeout=60.0,
+            max_retries=0,
         )
     
     @staticmethod
@@ -90,11 +138,11 @@ def cmd_model(*args):# switch model
 def cmd_help(*args):
    print("Available commands:")
    for name in COMMANDS:
-       print(f"  #{name}")
+       print(f"  /{name}")
     
 def cmd_clear(*args):
-    Session.stack = []
-    Session.messages = []
+    Session.stack = [{**Session.sysmsg, "timestamp": datetime.now().isoformat()}]
+    Session.messages = [Session.sysmsg]
     os.system('cls' if os.name == 'nt' else 'clear')
     
 def cmd_exit(*args):
@@ -135,7 +183,7 @@ def cmd_load(*args):
     
 def cmd_list(*args):
     if not args:
-        print("Usage: #list models|providers")
+        print("Usage: /list models|providers")
         return
     if args[0] == 'models': # list models
         #prov = Session.current_provider()
@@ -167,15 +215,27 @@ COMMANDS = {
 
 def _model_id(m):
     return m.id if hasattr(m, "id") else m["id"]
-       
+    
+def _model_color(m):
+    if m in Session.power_list:
+        return Fore.LIGHTRED_EX
+    elif m in Session.lite_list:
+        return Fore.LIGHTBLUE_EX
+    elif m in Session.coding_list:
+        return Fore.LIGHTGREEN_EX
+    else:
+        return ''
+
 def select_model():
     models = fetch_provider_models()
     if not models:
         print("Provider returned no models.")
         return False
     for idx, model in enumerate(models):
-        print(f"[{idx+1}]. {model}")
-    idx = input("Choose a default model:")
+        prefix = _model_color(model)
+        print(f"{prefix}{idx+1}. {model}{Style.RESET_ALL}", end=' | ')
+    print()
+    idx = input(f"Choose a default model [1-{len(models)}]:")
     if not idx.isdigit():
         print("Please enter a number")
         return False
@@ -216,7 +276,7 @@ def fetch_provider_models(url=None, apikey=None):
         return False
 
 def add_provider():
-    slug = input("Enter provider short name, e.g. 'groq':")
+    slug = input("Enter provider short name, e.g. 'groq' or 'github-models':")
     url = input("Enter provider base url:")
     api_key = input("Add provider api key:")
     if slug and url and api_key:
@@ -283,11 +343,8 @@ def chat():
     Session.model_id = prov['default_model_id']
     Session.connect()
     Session.update_prompt()
-    sysmsg = {
-        "role": "system",
-        "content": "Converse in terminal text, no markdown unless specifically asked for. Use the <file name='/foo/bar.txt'></file> at the end of message for sending/receiving text files"}
-    Session.stack = [{**sysmsg, "timestamp": datetime.now().isoformat()}]
-    Session.messages = [sysmsg]
+    Session.stack = [{**Session.sysmsg, "timestamp": datetime.now().isoformat()}]
+    Session.messages = [Session.sysmsg]
     
     while True: # repl
         try:
@@ -296,8 +353,8 @@ def chat():
             print()
             break
         if not text.strip():
-            continue            
-        elif text.startswith("#"):
+            continue
+        elif text.startswith("/"):
             dispatch_command(text[1:])
             continue
             
@@ -311,15 +368,18 @@ def chat():
         try:
             response = Session.client.chat.completions.create(
                 model=Session.model_id,
-                messages=Session.messages
+                messages=Session.messages,
             )
         except Exception as ex:
+            Session.messages.pop()
             print("Error:", ex)
+            if len(Session.attached) > 0: print("Attachments preserved.")
             continue
         Session.attached = []
         Session.stack.append({**msg, 'timestamp': datetime.now().isoformat()})
+        
         text = response.choices[0].message.content
-        print(f"{Fore.GREEN}{Session.model_id}: {Style.RESET_ALL}{text}")
+        print(f"{_model_color(Session.model_id)}{Session.model_id}: {Style.RESET_ALL}{text}")
         msg = {'role': 'assistant', 'content': text}
         Session.messages.append(msg)
         Session.stack.append({**msg, 'timestamp': datetime.now().isoformat()})
