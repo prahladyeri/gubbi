@@ -5,7 +5,7 @@
 
 # gubbi
 
-*Minimalist LLM chatbot 🐤*
+A minimal, chat-native LLM client for people who work in terminals and want explicit control over file attachments, session files, and provider switching without learning a plugin system.
 
 # Installation
 

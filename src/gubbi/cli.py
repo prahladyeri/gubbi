@@ -73,7 +73,9 @@ def cmd_use(*args): # switch provider
             if model_id:
                 Session.current_provider()['default_model_id'] = model_id
                 Session.model_id = model_id
-                cfghelper.save_settings(PKG_NAME, Session.cfg)
+        Session.cfg['default_provider_slug'] = Session.current_provider()['slug']
+        cfghelper.save_settings(PKG_NAME, Session.cfg)
+        print(f"Default model set to {Session.provider_slug}/{Session.model_id}")
         Session.update_prompt()
     
 def cmd_model(*args):# switch model
@@ -266,13 +268,17 @@ def dispatch_command(cmd):
     func(*args)
         
 def chat():
-    Session.provider_slug = next(iter(Session.cfg["providers"]))
+    if Session.cfg['default_provider_slug']:
+        Session.provider_slug = Session.cfg['default_provider_slug']
+    else:
+        Session.provider_slug = next(iter(Session.cfg["providers"]))
+    print(f"Provider set to {Session.provider_slug}")
     prov = Session.current_provider()
     if not prov['default_model_id']:
         prov['default_model_id'] = select_model()
         if not prov['default_model_id']: return
         cfghelper.save_settings(PKG_NAME, Session.cfg)
-        print(f"Default model set to '{prov['default_model_id']}'.")
+    print(f"Model set to {prov['default_model_id']}")
         
     Session.model_id = prov['default_model_id']
     Session.connect()
